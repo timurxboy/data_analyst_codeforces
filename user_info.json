@@ -1,0 +1,38 @@
+[
+    {
+        "lastName": "Korotkevich",
+        "country": "Беларусь",
+        "lastOnlineTimeSeconds": 1728063234,
+        "city": "Гомель",
+        "rating": 4009,
+        "friendOfCount": 72983,
+        "titlePhoto": "https://userpic.codeforces.org/422/title/50a270ed4a722867.jpg",
+        "handle": "tourist",
+        "avatar": "https://userpic.codeforces.org/422/avatar/2b5dbe87f0d859a2.jpg",
+        "firstName": "Gennady",
+        "contribution": 134,
+        "organization": "Университет ИТМО",
+        "rank": "tourist",
+        "maxRating": 4009,
+        "registrationTimeSeconds": 1265987288,
+        "maxRank": "tourist"
+    },
+    {
+        "lastName": "Jiang",
+        "country": "Китай",
+        "lastOnlineTimeSeconds": 1727891952,
+        "city": "Чунцин",
+        "rating": 3839,
+        "friendOfCount": 29490,
+        "titlePhoto": "https://userpic.codeforces.org/887306/title/b450806e36caa423.jpg",
+        "handle": "jiangly",
+        "avatar": "https://userpic.codeforces.org/887306/avatar/c9d0a77b2f3307a5.jpg",
+        "firstName": "Lingyu",
+        "contribution": 60,
+        "organization": "Jiangly Fan Club",
+        "rank": "легендарный гроссмейстер",
+        "maxRating": 3859,
+        "registrationTimeSeconds": 1547985852,
+        "maxRank": "легендарный гроссмейстер"
+    }
+]

@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    restart: always
+    container_name: codeforces
+    environment:
+      TZ: "Europe/Moscow"
+      PGTZ: "Europe/Moscow"
+      POSTGRES_PASSWORD: 2RGFDjoBgr9etrjlRU3NR1xLX9CCKw8i7jKA2Rhc
+      POSTGRES_USER: postgres
+      POSTGRES_DB: codeforces
+    command: postgres -c 'max_connections=1000'
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+
+
+volumes:
+  postgres-volume:
