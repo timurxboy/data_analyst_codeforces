@@ -131,7 +131,8 @@ class MemberParse:
     def get_problem(self, cur):
         get_problem_query = '''
             SELECT * FROM problem
-            ORDER BY problem.contest_id;
+            ORDER BY problem.contest_id, problem.index
+            ;
         '''
         cur.execute(get_problem_query)
         return cur.fetchall()
@@ -164,8 +165,8 @@ class MemberParse:
         try:
             with conn.cursor() as cur:
                 problems = self.get_problem(cur=cur)
-                for problem in problems:
-                for i in range (4, len(problems)+1):
+                # for problem in problems:
+                for i in range (11, len(problems)+1):
                     problem = problems[i]
                     contestId, index, solvedCount = problem[1], problem[2], problem[3]
                     page_count = (solvedCount + 49) // 50  # Округляем вверх
