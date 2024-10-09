@@ -78,7 +78,7 @@ class MemberParse:
             '''
         })
         driver.get(url=url)
-        driver.implicitly_wait(5)
+        driver.implicitly_wait(1)
         response = driver.page_source
         driver.quit()
 
