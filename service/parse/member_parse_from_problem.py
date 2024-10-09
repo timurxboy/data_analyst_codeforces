@@ -1,12 +1,13 @@
 from ..api.codeforces_api import CodeforcesAPI
 from ..db import Database
-import time
 import logging
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
+
+import logging
+from logging.handlers import RotatingFileHandler
 
 class MemberParse:
     def __init__(self):
@@ -16,18 +17,34 @@ class MemberParse:
         self.chrome_options = Options()
         self.chrome_options.add_argument('--headless')
         
-        self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')  # Скрывает автоматизацию от сайта
-        self.chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])  # Отключает "controlled by automation"
-        self.chrome_options.add_experimental_option('useAutomationExtension', False)  # Отключает автоматизацию
-        self.chrome_options.add_argument('--disable-infobars')  # Убирает инфо-панель "Chrome is being controlled by automated test software"
-
+        self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        self.chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        self.chrome_options.add_experimental_option('useAutomationExtension', False)
+        self.chrome_options.add_argument('--disable-infobars')
         self.chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36")
 
-        self.chrome_options.add_argument('--disable-dev-shm-usage')  # Уменьшает использование разделяемой памяти
-        self.chrome_options.add_argument('--no-sandbox')  # Для предотвращения сбоев в headless-режиме
-        self.chrome_options.add_argument('--window-size=1920x1080')  # Определяет размер окна
+        self.chrome_options.add_argument('--disable-dev-shm-usage')
+        self.chrome_options.add_argument('--no-sandbox')
+        self.chrome_options.add_argument('--window-size=1920x1080')
+        self.chrome_options.add_argument('--disable-gpu')
 
-        self.chrome_options.add_argument('--disable-gpu')  # Отключить использование GPU
+        # Настраиваем два логгера
+        self.setup_logging()
+
+    def setup_logging(self):
+        # Логгер для терминала
+        self.console_logger = logging.getLogger("console_logger")
+        self.console_logger.setLevel(logging.INFO)
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter('%(message)s'))
+        self.console_logger.addHandler(console_handler)
+
+        # Логгер для файла
+        self.file_logger = logging.getLogger("file_logger")
+        self.file_logger.setLevel(logging.DEBUG)
+        file_handler = RotatingFileHandler('detailed_logs.log', maxBytes=10**6, backupCount=3)  # Лог-файл с ротацией
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        self.file_logger.addHandler(file_handler)
 
     def create_member(self, cur, conn, dataset: set):
         create_member_query = '''
@@ -39,7 +56,7 @@ class MemberParse:
             cur.executemany(create_member_query, [(handle,) for handle in dataset])  # Используем executemany для вставки всех пользователей сразу
             conn.commit()
         except Exception as e:
-            logging.error(f"Ошибка при добавлении пользователей: {e}")
+            self.file_logger.error(f"Ошибка при добавлении пользователей: {e}")
 
     def get_problem(self, cur):
         get_problem_query = '''
@@ -61,7 +78,7 @@ class MemberParse:
             '''
         })
         driver.get(url=url)
-        driver.implicitly_wait(5)  # Ожидание до 5 секунд перед извлечением
+        driver.implicitly_wait(5)
         response = driver.page_source
         driver.quit()
 
@@ -81,62 +98,51 @@ class MemberParse:
                                 member_handle = href_value.split('/profile/')[1]
                                 if member_handle:
                                     dataset.add(member_handle)
+        
+        # Логгируем детали запроса в файл
         if not dataset:
-            logging.error(f'Ошибка загрузки страницы {url}')
+            self.file_logger.error(f'Ошибка загрузки страницы {url}')
+        else:
+            self.file_logger.info(f'Успешно загружена страница {url} с {len(dataset)} пользователями')
 
         return dataset
 
-    def process_problem(self, cur, conn, contestId, index, page_count, task_id, pbar):
+    def process_problem(self, cur, conn, contestId, index, page_count, task_id):
         for page in range(1, page_count + 1):
             dataset = self.fetch_page(contestId, index, page)
             if dataset:
                 self.create_member(cur=cur, conn=conn, dataset=dataset)
 
-            percent_complete = (page / page_count) * 100
-            pbar.update(1)  # Обновляем прогресс-бар
+        # Сообщаем о завершении задачи в консоли
+        self.console_logger.info(f'Задача {index} из контеста {contestId} завершена')
 
     def fetch_members_from_page(self):
-        conn = self.db.connect()  # Открываем одно подключение на всю обработку страниц
+        conn = self.db.connect()
         try:
             with conn.cursor() as cur:
                 problems = self.get_problem(cur=cur)
                 
-                # Ограничиваем до 10 потоков
                 with ThreadPoolExecutor(max_workers=5) as executor:
                     futures = []
-                    progress_bars = []  # Список для прогресс-баров
                     
                     for i in range(11, len(problems) + 1):
                         problem = problems[i]
                         contestId, index, solvedCount = problem[1], problem[2], problem[3]
                         page_count = (solvedCount + 49) // 50
                         
-                        # Создаём прогресс-бар для каждой задачи
-                        pbar = tqdm(total=page_count, desc=f"Задача {index} из контеста {contestId}")
-                        progress_bars.append(pbar)
-                        
-                        # Добавляем задачи в executor
-                        futures.append(executor.submit(self.process_problem, cur, conn, contestId, index, page_count, i, pbar))
+                        futures.append(executor.submit(self.process_problem, cur, conn, contestId, index, page_count, i))
 
-                    # Обрабатываем результаты
                     for future in as_completed(futures):
                         try:
-                            future.result()  # Если возникает ошибка, она будет брошена здесь
+                            future.result()
                         except Exception as e:
-                            logging.error(f"Ошибка в процессе обработки: {e}")
-                        
-                    # Закрываем все прогресс-бары после завершения
-                    for pbar in progress_bars:
-                        pbar.close()
+                            self.file_logger.error(f"Ошибка в процессе обработки: {e}")
                         
         except Exception as e:
-            logging.error(f"Ошибка при обработке страниц: {e}")
+            self.file_logger.error(f"Ошибка при обработке страниц: {e}")
         finally:
-            conn.close()  # Закрываем соединение после всех страниц
+            conn.close()
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
     parser = MemberParse()
     parser.fetch_members_from_page()
-
-
