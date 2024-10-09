@@ -14,6 +14,19 @@ class MemberParse:
         self.db = Database()  # Инициализация подключения к базе данных
         self.ratings_page_url = 'https://codeforces.com/problemset/status/'
         self.chrome_options = Options()
+        self.chrome_options.add_argument('--headless')
+        
+        self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')  # Скрывает автоматизацию от сайта
+        self.chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])  # Отключает "controlled by automation"
+        self.chrome_options.add_experimental_option('useAutomationExtension', False)  # Отключает автоматизацию
+        self.chrome_options.add_argument('--disable-infobars')  # Убирает инфо-панель "Chrome is being controlled by automated test software"
+
+        self.chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36")
+
+        self.chrome_options.add_argument('--disable-dev-shm-usage')  # Уменьшает использование разделяемой памяти
+        self.chrome_options.add_argument('--no-sandbox')  # Для предотвращения сбоев в headless-режиме
+        self.chrome_options.add_argument('--window-size=1920x1080')  # Определяет размер окна
+
         self.chrome_options.add_argument('--disable-gpu')  # Отключить использование GPU
 
     def create_member(self, cur, conn, dataset: set):
@@ -40,8 +53,15 @@ class MemberParse:
     def fetch_page(self, contestId, index, page):
         url = f'{self.ratings_page_url}{contestId}/problem/{index}/page/{page}'
         driver = webdriver.Chrome(options=self.chrome_options)
+        driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+            'source': '''
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                })
+            '''
+        })
         driver.get(url=url)
-        time.sleep(10)
+        driver.implicitly_wait(10)  # Ожидание до 10 секунд перед извлечением
         response = driver.page_source
         driver.quit()
 
