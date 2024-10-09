@@ -122,7 +122,7 @@ class MemberParse:
             with conn.cursor() as cur:
                 problems = self.get_problem(cur=cur)
                 
-                with ThreadPoolExecutor(max_workers=2) as executor:
+                with ThreadPoolExecutor(max_workers=1) as executor:
                     futures = []
                     
                     for i in range(11, len(problems) + 1):
