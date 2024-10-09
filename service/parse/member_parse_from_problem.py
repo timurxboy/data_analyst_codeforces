@@ -61,7 +61,7 @@ class MemberParse:
             '''
         })
         driver.get(url=url)
-        driver.implicitly_wait(10)  # Ожидание до 10 секунд перед извлечением
+        driver.implicitly_wait(3)  # Ожидание до 10 секунд перед извлечением
         response = driver.page_source
         driver.quit()
 
@@ -95,8 +95,6 @@ class MemberParse:
             percent_complete = (page / page_count) * 100
             pbar.update(1)  # Обновляем прогресс-бар
 
-            time.sleep(1)
-
     def fetch_members_from_page(self):
         conn = self.db.connect()  # Открываем одно подключение на всю обработку страниц
         try:
@@ -104,7 +102,7 @@ class MemberParse:
                 problems = self.get_problem(cur=cur)
                 
                 # Ограничиваем до 10 потоков
-                with ThreadPoolExecutor(max_workers=10) as executor:
+                with ThreadPoolExecutor(max_workers=5) as executor:
                     futures = []
                     progress_bars = []  # Список для прогресс-баров
                     
