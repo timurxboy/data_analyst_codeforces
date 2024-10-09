@@ -61,7 +61,7 @@ class MemberParse:
             '''
         })
         driver.get(url=url)
-        driver.implicitly_wait(3)  # Ожидание до 10 секунд перед извлечением
+        driver.implicitly_wait(5)  # Ожидание до 5 секунд перед извлечением
         response = driver.page_source
         driver.quit()
 
