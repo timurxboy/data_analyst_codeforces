@@ -42,7 +42,7 @@ class MemberParse:
         # Логгер для файла
         self.file_logger = logging.getLogger("file_logger")
         self.file_logger.setLevel(logging.DEBUG)
-        file_handler = RotatingFileHandler('detailed_logs.log', maxBytes=10**6, backupCount=3)  # Лог-файл с ротацией
+        file_handler = RotatingFileHandler('logging_member_parse_from_problem.log', maxBytes=10**6, backupCount=3)  # Лог-файл с ротацией
         file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         self.file_logger.addHandler(file_handler)
 
