@@ -17,16 +17,16 @@ class MemberParse:
         self.chrome_options = Options()
         self.chrome_options.add_argument('--headless')
         
-        self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-        self.chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        self.chrome_options.add_experimental_option('useAutomationExtension', False)
-        self.chrome_options.add_argument('--disable-infobars')
+        self.chrome_options.add_argument('--disable-blink-features=AutomationControlled')  # Скрывает автоматизацию от сайта
+        self.chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])  # Отключает "controlled by automation"
+        self.chrome_options.add_experimental_option('useAutomationExtension', False)  # Отключает автоматизацию
+        self.chrome_options.add_argument('--disable-infobars')  # Убирает инфо-панель "Chrome is being controlled by automated test software"
         self.chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36")
 
-        self.chrome_options.add_argument('--disable-dev-shm-usage')
-        self.chrome_options.add_argument('--no-sandbox')
-        self.chrome_options.add_argument('--window-size=1920x1080')
-        self.chrome_options.add_argument('--disable-gpu')
+        self.chrome_options.add_argument('--disable-dev-shm-usage')  # Уменьшает использование разделяемой памяти
+        self.chrome_options.add_argument('--no-sandbox')  # Для предотвращения сбоев в headless-режиме
+        self.chrome_options.add_argument('--window-size=1920x1080')  # Определяет размер окна
+        self.chrome_options.add_argument('--disable-gpu')  # Отключить использование GPU
 
         # Настраиваем два логгера
         self.setup_logging()
