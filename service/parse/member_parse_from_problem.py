@@ -125,7 +125,7 @@ class MemberParse:
                 with ThreadPoolExecutor(max_workers=1) as executor:
                     futures = []
                     
-                    for i in range(356, len(problems) + 1):
+                    for i in range(609, len(problems) + 1):
                         problem = problems[i]
                         contestId, index, solvedCount = problem[1], problem[2], problem[3]
                         page_count = (solvedCount + 49) // 50
